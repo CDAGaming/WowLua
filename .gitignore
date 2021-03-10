@@ -1,2 +1,36 @@
+# eclipse
+bin
+*.launch
+.settings
+.metadata
+.classpath
+.project
 
-# /
+# idea
+out
+*.ipr
+*.iws
+*.iml
+.idea
+
+# gradle
+build
+.gradle
+
+# other
+eclipse
+run
+classes/
+
+/local.properties
+.floo
+.flooignore
+
+logs/
+
+CraftPresence/.vscode/
+.vscode/
+
+script/__pycache__/
+
+luacheck.exe

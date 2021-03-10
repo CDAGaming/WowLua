@@ -1,4 +1,10 @@
+#@retail@
 ## Interface: 90005
+#@end-retail@
+#@non-retail@
+# ## Interface: 11306
+#@end-non-retail@
+
 ## Title: WowLua
 ## Version: @project-version@
 ## Author: Cladhaire
