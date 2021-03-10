@@ -1,10 +1,10 @@
 local addon = ...
 
 local L = WowLuaLocals
-local frame = CreateFrame("Frame", addon .. "ConfigFrame", InterfaceOptionsFramePanelContainer)
-frame.name = addon
-frame:Hide()
-frame:SetScript("OnShow", function(frame)
+local config_frame = CreateFrame("Frame", addon .. "ConfigFrame", InterfaceOptionsFramePanelContainer)
+config_frame.name = addon
+config_frame:Hide()
+config_frame:SetScript("OnShow", function(frame)
     local title = frame:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
     title:SetPoint("TOPLEFT", 16, -16)
     title:SetText(L.CONFIG_TITLE:format(addon))
@@ -25,14 +25,14 @@ frame:SetScript("OnShow", function(frame)
     slider.text = _G[slider:GetName() .. "Text"]
     slider.low = _G[slider:GetName() .. "Low"]
     slider.high = _G[slider:GetName() .. "High"]
-   
+
     slider.text:SetText(L.CONFIG_LABEL_FONTSIZE)
     slider.low:SetText("Small")
     slider.high:SetText("Large")
     slider.tooltipText = L.CONFIG_FONTSIZE_TOOLTIP
 
-    slider:SetScript("OnValueChanged", function(self, value)
-        local file, height, flags = WowLuaMonoFont:GetFont()
+    slider:SetScript("OnValueChanged", function(_, value)
+        local file, _, flags = WowLuaMonoFont:GetFont()
         WowLuaMonoFont:SetFont(file, value, flags)
         WowLua_DB.fontSize = value
     end)
@@ -40,12 +40,12 @@ frame:SetScript("OnShow", function(frame)
     local Refresh;
     function Refresh()
         if not frame:IsVisible() then return end
-        local file, height, flags = WowLuaMonoFont:GetFont()
+        local _, height, _ = WowLuaMonoFont:GetFont()
         slider:SetValue(height)
     end
 
-    frame:SetScript("OnShow", Refresh) 
+    frame:SetScript("OnShow", Refresh)
     Refresh()
 end)
 
-InterfaceOptions_AddCategory(frame)
+InterfaceOptions_AddCategory(config_frame)

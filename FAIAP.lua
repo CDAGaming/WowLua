@@ -8,10 +8,10 @@
 -- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 -- copies of the Software, and to permit persons to whom the Software is
 -- furnished to do so, subject to the following conditions:
--- 
+--
 -- The above copyright notice and this permission notice shall be included in
 -- all copies or substantial portions of the Software.
--- 
+--
 -- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 -- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 -- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -202,11 +202,11 @@ local function nextNumberExponentPartInt(text, pos)
 		if not byte then
 			return tokens.TOKEN_NUMBER, pos
 		end
-		
-		if byte >= bytes.BYTE_0 and byte <= bytes.BYTE_9 then	
+
+		if byte >= bytes.BYTE_0 and byte <= bytes.BYTE_9 then
 			pos = pos + 1
 		else
-			return tokens.TOKEN_NUMBER, pos 
+			return tokens.TOKEN_NUMBER, pos
 		end
 	end
 end
@@ -216,7 +216,7 @@ local function nextNumberExponentPart(text, pos)
 	if not byte then
 		return tokens.TOKEN_NUMBER, pos
 	end
-	
+
 	if byte == bytes.BYTE_MINUS then
 		-- handle this case: a = 1.2e-- some comment
 		-- i decide to let 1.2e be parsed as a a number
@@ -226,7 +226,7 @@ local function nextNumberExponentPart(text, pos)
 		end
 		return nextNumberExponentPartInt(text, pos + 1)
 	end
-	
+
 	return nextNumberExponentPartInt(text, pos)
 end
 
@@ -236,13 +236,13 @@ local function nextNumberFractionPart(text, pos)
 		if not byte then
 			return tokens.TOKEN_NUMBER, pos
 		end
-		
-		if byte >= bytes.BYTE_0 and byte <= bytes.BYTE_9 then	
+
+		if byte >= bytes.BYTE_0 and byte <= bytes.BYTE_9 then
 			pos = pos + 1
 		elseif byte == bytes.BYTE_E or byte == bytes.BYTE_e then
 			return nextNumberExponentPart(text, pos + 1)
 		else
-			return tokens.TOKEN_NUMBER, pos 
+			return tokens.TOKEN_NUMBER, pos
 		end
 	end
 end
@@ -253,8 +253,8 @@ local function nextNumberIntPart(text, pos)
 		if not byte then
 			return tokens.TOKEN_NUMBER, pos
 		end
-		
-		if byte >= bytes.BYTE_0 and byte <= bytes.BYTE_9 then	
+
+		if byte >= bytes.BYTE_0 and byte <= bytes.BYTE_9 then
 			pos = pos + 1
 		elseif byte == bytes.BYTE_PERIOD then
 			return nextNumberFractionPart(text, pos + 1)
@@ -269,7 +269,7 @@ end
 local function nextIdentifier(text, pos)
 	while true do
 		local byte = stringbyte(text, pos)
-		
+
 		if not byte or
 			linebreakCharacters[byte] or
 			whitespaceCharacters[byte] or
@@ -309,7 +309,7 @@ local function nextBracketString(text, pos, equalsCount)
 		if not byte then
 			return tokens.TOKEN_STRING, pos
 		end
-		
+
 		if byte == bytes.BYTE_RIGHTBRACKET then
 			if state == 0 then
 				state = 1
@@ -360,7 +360,7 @@ local function nextString(text, pos, character)
 		if not byte then
 			return tokens.TOKEN_STRING, pos
 		end
-		
+
 		if byte == character then
 			if even then
 				return tokens.TOKEN_STRING, pos + 1
@@ -371,7 +371,7 @@ local function nextString(text, pos, character)
 		else
 			even = true
 		end
-		
+
 		pos = pos + 1
 	end
 end
@@ -387,11 +387,11 @@ function lib.nextToken(text, pos)
 	if not byte then
 		return nil
 	end
-	
+
 	if linebreakCharacters[byte] then
 		return tokens.TOKEN_LINEBREAK, pos + 1
 	end
-	
+
 	if whitespaceCharacters[byte] then
 		while true do
 			pos = pos + 1
@@ -401,13 +401,13 @@ function lib.nextToken(text, pos)
 			end
 		end
 	end
-	
+
 	local token = specialCharacters[byte]
 	if token then
 		if token ~= -1 then
 			return token, pos + 1
 		end
-		
+
 		-- WoW specific (for color codes)
 		if byte == bytes.BYTE_VERTICAL then
 			byte = stringbyte(text, pos + 1)
@@ -422,7 +422,7 @@ function lib.nextToken(text, pos)
 			end
 			return tokens.TOKEN_UNKNOWN, pos + 1
 		end
-		
+
 		if byte == bytes.BYTE_MINUS then
 			byte = stringbyte(text, pos + 1)
 			if byte == bytes.BYTE_MINUS then
@@ -430,11 +430,11 @@ function lib.nextToken(text, pos)
 			end
 			return tokens.TOKEN_MINUS, pos + 1
 		end
-		
+
 		if byte == bytes.BYTE_SINGLE_QUOTE then
 			return nextString(text, pos + 1, bytes.BYTE_SINGLE_QUOTE)
 		end
-		
+
 		if byte == bytes.BYTE_DOUBLE_QUOTE then
 			return nextString(text, pos + 1, bytes.BYTE_DOUBLE_QUOTE)
 		end
@@ -447,7 +447,7 @@ function lib.nextToken(text, pos)
 				return tokens.TOKEN_LEFTBRACKET, pos + 1
 			end
 		end
-		
+
 		if byte == bytes.BYTE_EQUALS then
 			byte = stringbyte(text, pos + 1)
 			if not byte then
@@ -458,7 +458,7 @@ function lib.nextToken(text, pos)
 			end
 			return tokens.TOKEN_ASSIGNMENT, pos + 1
 		end
-		
+
 		if byte == bytes.BYTE_PERIOD then
 			byte = stringbyte(text, pos + 1)
 			if not byte then
@@ -475,7 +475,7 @@ function lib.nextToken(text, pos)
 			end
 			return tokens.TOKEN_PERIOD, pos + 1
 		end
-		
+
 		if byte == bytes.BYTE_LESSTHAN then
 			byte = stringbyte(text, pos + 1)
 			if byte == bytes.BYTE_EQUALS then
@@ -483,7 +483,7 @@ function lib.nextToken(text, pos)
 			end
 			return tokens.TOKEN_LT, pos + 1
 		end
-		
+
 		if byte == bytes.BYTE_GREATERTHAN then
 			byte = stringbyte(text, pos + 1)
 			if byte == bytes.BYTE_EQUALS then
@@ -491,7 +491,7 @@ function lib.nextToken(text, pos)
 			end
 			return tokens.TOKEN_GT, pos + 1
 		end
-		
+
 		if byte == bytes.BYTE_TILDE then
 			byte = stringbyte(text, pos + 1)
 			if byte == bytes.BYTE_EQUALS then
@@ -499,7 +499,7 @@ function lib.nextToken(text, pos)
 			end
 			return tokens.TOKEN_TILDE, pos + 1
 		end
-		
+
 		return tokens.TOKEN_UNKNOWN, pos + 1
 	elseif byte >= bytes.BYTE_0 and byte <= bytes.BYTE_9 then
 		return nextNumberIntPart(text, pos + 1)
@@ -576,7 +576,7 @@ function lib.colorCodeCode(code, colorTable, caretPosition)
 	local newCaretPosition
 	local prevTokenWasColored = false
 	local prevTokenWidth = 0
-	
+
 	local pos = 1
 	local level = 0
 
@@ -596,19 +596,18 @@ function lib.colorCodeCode(code, colorTable, caretPosition)
 				newCaretPosition = newCaretPosition - diff
 			end
 		end
-		
+
 		prevTokenWasColored = false
 		prevTokenWidth = 0
-		
+
 		local tokenType, nextPos = lib.nextToken(code, pos)
-		
+
 		if not tokenType then
 			break
 		end
-		
+
 		if tokenType == tokens.TOKEN_COLORCODE_START or tokenType == tokens.TOKEN_COLORCODE_STOP or tokenType == tokens.TOKEN_UNKNOWN then
 			-- ignore color codes
-			
 		elseif tokenType == tokens.TOKEN_LINEBREAK or tokenType == tokens.TOKEN_WHITESPACE then
 			if tokenType == tokens.TOKEN_LINEBREAK then
 				numLines = numLines + 1
@@ -621,14 +620,14 @@ function lib.colorCodeCode(code, colorTable, caretPosition)
 			totalLen = totalLen + stringlen(str)
 		else
 			local str = stringsub(code, pos, nextPos - 1)
-			
+
 			prevTokenWidth = nextPos - pos
-			
+
 			-- Add coloring
 			if keywords[str] then
 				tokenType = tokens.TOKEN_KEYWORD
 			end
-			
+
 			local color
 			if stopColor then
 				color = colorTable[str]
@@ -643,7 +642,7 @@ function lib.colorCodeCode(code, colorTable, caretPosition)
 					end
 				end
 			end
-			
+
 			if color then
 				tsize = tsize + 1
 				workingTable[tsize] = color
@@ -661,7 +660,7 @@ function lib.colorCodeCode(code, colorTable, caretPosition)
 				totalLen = totalLen + stringlen(str)
 			end
 		end
-		
+
 		pos = nextPos
 	end
 	return table.concat(workingTable), newCaretPosition, numLines
@@ -677,7 +676,7 @@ function lib.indentCode(code, tabWidth, colorTable, caretPosition)
 	else
 		fillFunction = fillWithTabs
 	end
-	
+
 	tableclear(workingTable)
 	local tsize = 0
 	local totalLen = 0
@@ -694,10 +693,10 @@ function lib.indentCode(code, tabWidth, colorTable, caretPosition)
 	local newCaretPositionFinalized = false
 	local prevTokenWasColored = false
 	local prevTokenWidth = 0
-	
+
 	local pos = 1
 	local level = 0
-	
+
 	local hitNonWhitespace = false
 	local hitIndentRight = false
 	local preIndent = 0
@@ -718,27 +717,26 @@ function lib.indentCode(code, tabWidth, colorTable, caretPosition)
 				newCaretPosition = newCaretPosition - diff
 			end
 		end
-		
+
 		prevTokenWasColored = false
 		prevTokenWidth = 0
-		
+
 		local tokenType, nextPos = lib.nextToken(code, pos)
-		
+
 		if not tokenType or tokenType == tokens.TOKEN_LINEBREAK then
 			level = level + preIndent
 			if level < 0 then level = 0 end
-			
+
 			local s = fillFunction(level, tabWidth)
 
 			tsize = tsize + 1
 			workingTable[tsize] = s
 			totalLen = totalLen + stringlen(s)
-			
+
 			if newCaretPosition and not newCaretPositionFinalized then
 				newCaretPosition = newCaretPosition + stringlen(s)
 				newCaretPositionFinalized = true
 			end
-			
 
 			for k, v in next,workingTable2 do
 				tsize = tsize + 1
@@ -749,14 +747,14 @@ function lib.indentCode(code, tabWidth, colorTable, caretPosition)
 			if not tokenType then
 				break
 			end
-			
+
 			tsize = tsize + 1
 			workingTable[tsize] = stringsub(code, pos, nextPos - 1)
 			totalLen = totalLen + nextPos - pos
 
 			level = level + postIndent
 			if level < 0 then level = 0 end
-			
+
 			tableclear(workingTable2)
 			tsize2 = 0
 			totalLen2 = 0
@@ -768,7 +766,7 @@ function lib.indentCode(code, tabWidth, colorTable, caretPosition)
 		elseif tokenType == tokens.TOKEN_WHITESPACE then
 			if hitNonWhitespace then
 				prevTokenWidth = nextPos - pos
-				
+
 				tsize2 = tsize2 + 1
 				local s = stringsub(code, pos, nextPos - 1)
 				workingTable2[tsize2] = s
@@ -778,11 +776,11 @@ function lib.indentCode(code, tabWidth, colorTable, caretPosition)
 			-- skip these, though they shouldn't be encountered here anyway
 		else
 			hitNonWhitespace = true
-			
+
 			local str = stringsub(code, pos, nextPos - 1)
-			
+
 			prevTokenWidth = nextPos - pos
-			
+
 			-- See if this is an indent-modifier
 			local indentTable
 			if tokenType == tokens.TOKEN_IDENTIFIER then
@@ -790,7 +788,7 @@ function lib.indentCode(code, tabWidth, colorTable, caretPosition)
 			else
 				indentTable = tokenIndentation[tokenType]
 			end
-			
+
 			if indentTable then
 				if hitIndentRight then
 					postIndent = postIndent + indentTable[1] + indentTable[2]
@@ -804,12 +802,12 @@ function lib.indentCode(code, tabWidth, colorTable, caretPosition)
 					postIndent = postIndent + post
 				end
 			end
-			
+
 			-- Add coloring
 			if keywords[str] then
 				tokenType = tokens.TOKEN_KEYWORD
 			end
-			
+
 			local color
 			if stopColor then
 				color = colorTable[str]
@@ -824,7 +822,7 @@ function lib.indentCode(code, tabWidth, colorTable, caretPosition)
 					end
 				end
 			end
-			
+
 			if color then
 				tsize2 = tsize2 + 1
 				workingTable2[tsize2] = color
@@ -866,7 +864,7 @@ function lib.stripWowColors(code)
 	-- The reason for the bug, is that a |r\n\n gets converted to \n\n|r after the next indent-run
 	-- The fix is to remove those last two linebreaks when stripping
 	code = stringgsub(code, "|r\n\n$", "|r")
-	
+
 	tableclear(workingTable)
 	local tsize = 0
 
@@ -887,12 +885,12 @@ function lib.stripWowColors(code)
 		else
 			if prevVertical and not even then
 				if byte == bytes.BYTE_c then
-					
+
 					if pos - 2 >= selectionStart then
 						tsize = tsize + 1
 						workingTable[tsize] = stringsub(code, selectionStart, pos - 2)
 					end
-					
+
 					pos = pos + 8
 					selectionStart = pos + 1
 				elseif byte == bytes.BYTE_r then
@@ -985,14 +983,14 @@ function lib.colorCodeEditbox(editbox)
 	if prevCode == orgCode then
 		return
 	end
-	
+
 	local pos = editbox:GetCursorPosition()
-	
+
 	local code
 	code, pos = lib.stripWowColorsWithPos(orgCode, pos)
 
 	colorTable[0] = "|r"
-	
+
 	local newCode, newPos, numLines = lib.colorCodeCode(code, colorTable, pos)
 	if editbox:IsMultiLine() then
 		newCode = lib.padWithLinebreaks(newCode)
@@ -1007,11 +1005,11 @@ function lib.colorCodeEditbox(editbox)
 		if newPos then
 			if newPos < 0 then newPos = 0 end
 			if newPos > stringlenNewCode then newPos = stringlenNewCode end
-			
+
 			editbox:SetCursorPosition(newPos)
 		end
 	end
-	
+
 	if editboxNumLinesCache[editbox] ~= numLines then
 		lib.indentEditbox(editbox)
 	end
@@ -1031,13 +1029,13 @@ function lib.indentEditbox(editbox)
 	end
 
 	local pos = editbox:GetCursorPosition()
-	
+
 	local code
 	code, pos = lib.stripWowColorsWithPos(orgCode, pos)
 
 	colorTable[0] = "|r"
 	local newCode, newPos = lib.indentCode(code, tabWidth, colorTable, pos)
-	if editbox:IsMultiLine() then 
+	if editbox:IsMultiLine() then
 		newCode = lib.padWithLinebreaks(newCode)
 	end
 
@@ -1052,7 +1050,7 @@ function lib.indentEditbox(editbox)
 		if newPos then
 			if newPos < 0 then newPos = 0 end
 			if newPos > stringlenNewCode then newPos = stringlenNewCode end
-			
+
 			editbox:SetCursorPosition(newPos)
 		end
 	end
@@ -1160,8 +1158,8 @@ function lib.enable(editbox, colorTable, tabWidth)
 	editbox.SetText = newSetText
 
 	hookHandler(editbox, "OnTextChanged", textChangedHook)
-	hookHandler(editbox, "OnTabPressed", tabPressedHook)      
-	hookHandler(editbox, "OnUpdate", onUpdateHook)      
+	hookHandler(editbox, "OnTabPressed", tabPressedHook)
+	hookHandler(editbox, "OnUpdate", onUpdateHook)
 
 	lib.indentEditbox(editbox)
 end

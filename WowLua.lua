@@ -7,6 +7,10 @@
 
 local addon = ...
 local version = GetAddOnMetadata("WowLua", "Version") or "SVN"
+-- Compatibility Data
+local build_version, build_id, build_date, toc_version
+local retail_toc = 90005
+local classic_toc = 11306
 WowLua = {
 	VERSION = "WowLua v" .. version .. " Interactive Interpreter",
 	queue = {},
@@ -23,16 +27,15 @@ WowLua_DB = {
     fontSize = 14,
 }
 
-local DB = {}
-
 local eframe = CreateFrame("Frame")
 eframe:RegisterEvent("ADDON_LOADED")
-eframe:SetScript("OnEvent", function(self, event, ...)
+eframe:SetScript("OnEvent", function(_, event, ...)
     if event == "ADDON_LOADED" then
+		build_version, build_id, build_date, toc_version = GetBuildInfo()
         local arg1 = ...
         if arg1 == addon then
             if WowLua_DB.fontSize then
-                local file, height, flags = WowLuaMonoFont:GetFont()
+                local file, _, flags = WowLuaMonoFont:GetFont()
                 WowLuaMonoFont:SetFont(file, WowLua_DB.fontSize, flags)
             end
         end
@@ -164,6 +167,7 @@ function WowLua:ProcessLine(text)
 
 	-- Process the current command
 	local func,err = loadstring(self.cmd)
+	local succ
 
 	-- Fail to compile?  Give it a return
 	-- Check to see if this just needs a return in front of it
@@ -191,7 +195,7 @@ function WowLua:ProcessLine(text)
 		print = wowpad_print
 
 		-- Call the function
-		local succ,err = pcall(func)
+		succ,err = pcall(func)
 
 		-- Restore the value of print
 		print = old_print
@@ -206,8 +210,8 @@ function WowLua:ProcessLine(text)
 end
 
 function WowLua:RunScript(text)
-	-- escape any color codes:
-	local output = text:gsub("\124", "\124\124")
+	-- escape any color codes (unused):
+	-- local output = text:gsub("\124", "\124\124")
 
 	if text == L.RELOAD_COMMAND then
 		ReloadUI()
@@ -221,6 +225,7 @@ function WowLua:RunScript(text)
 
 	-- Process the current command
 	local func,err = loadstring(text, "WowLua")
+	local succ
 
 	if not func then
 		WowLuaFrameOutput:AddMessage("|cffff0000" .. err .. "|r")
@@ -231,7 +236,7 @@ function WowLua:RunScript(text)
 		print = wowpad_print
 
 		-- Call the function
-		local succ,err = pcall(func)
+		succ,err = pcall(func)
 
 		-- Restore the value of print
 		print = old_print
@@ -263,7 +268,7 @@ function WowLua:Button_OnEnter(frame)
 	GameTooltip:Show();
 end
 
-function WowLua:Button_OnLeave(frame)
+function WowLua:Button_OnLeave(_)
 	GameTooltip:Hide()
 end
 
@@ -312,7 +317,7 @@ end
 
 function WowLua:Queue(text)
 	if #self.queue == 0 then
-		local page, entry = WowLua:GetCurrentPage()
+		local _, entry = WowLua:GetCurrentPage()
 		self.queue[1] = entry.content
 		self.queuePos = 1
 	end
@@ -348,7 +353,7 @@ function WowLua:GetRedoPage()
 	return self.queue[self.queuePos]
 end
 
-function WowLua:Button_New(button)
+function WowLua:Button_New(_)
 	if self:IsModified() then
 		-- Display the unsaved changes dialog
 		local dialog = StaticPopup_Show("WOWLUA_UNSAVED")
@@ -357,7 +362,7 @@ function WowLua:Button_New(button)
 	end
 
 	-- Create a new page and display it
-	local entry, num = WowLua:CreateNewPage()
+	local entry, _ = WowLua:CreateNewPage()
 
 	WowLuaFrameEditBox:SetText(entry.content)
 	WowLua:UpdateButtons()
@@ -373,7 +378,7 @@ function WowLua:OpenDropDownOnLoad(frame)
 	UIDropDownMenu_Initialize(frame, self.OpenDropDownInitialize)
 end
 
-local function dropDownFunc(button, page)
+local function dropDownFunc(_, page)
 	WowLua:GoToPage(page)
 end
 
@@ -417,7 +422,7 @@ StaticPopupDialogs["WOWLUA_SAVE_AS"] = {
 		editBox:SetText(WowLua.save_as_name)
 		editBox:HighlightText()
 	end,
-	OnHide = function(self)
+	OnHide = function(_)
         local activeWindow = ChatEdit_GetActiveWindow()
         if activeWindow then
             activeWindow:SetText("")
@@ -466,19 +471,19 @@ function WowLua:Button_Save(button)
 	end
 end
 
-function WowLua:Button_Undo(button)
-	local page, entry = self:GetCurrentPage()
+function WowLua:Button_Undo(_)
+	local _, entry = self:GetCurrentPage()
 	local undo = WowLua:GetUndoPage()
 	WowLuaFrameEditBox:SetText(undo or entry.content)
 end
 
-function WowLua:Button_Redo(button)
-	local page, entry = self:GetCurrentPage()
+function WowLua:Button_Redo(_)
+	--local page, entry = self:GetCurrentPage()
 	local redo = WowLua:GetRedoPage()
 	WowLuaFrameEditBox:SetText(redo)
 end
 
-function WowLua:Button_Delete(button)
+function WowLua:Button_Delete(_)
 	if self:IsModified() then
 		-- Display the unsaved changes dialog
 		local dialog = StaticPopup_Show("WOWLUA_UNSAVED")
@@ -495,19 +500,19 @@ function WowLua:Button_Delete(button)
 	self:DeletePage(page)
 
 	if page > 1 then page = page - 1 end
-	local entry = self:SelectPage(page)
+	entry = self:SelectPage(page)
 	WowLuaFrameEditBox:SetText(entry.content)
 	self:UpdateButtons()
 	self:SetTitle(false)
 end
 
-function WowLua:Button_Lock(button)
+function WowLua:Button_Lock(_)
 	local id = self:GetCurrentPage()
 	self:LockPage(id, true)
 	self:UpdateButtons()
 end
 
-function WowLua:Button_Unlock(button)
+function WowLua:Button_Unlock(_)
 	local id = self:GetCurrentPage()
 	self:LockPage(id, false)
 	self:UpdateButtons()
@@ -518,7 +523,7 @@ StaticPopupDialogs["WOWLUA_UNSAVED"] = {
 	button1 = OKAY and OKAY or "Okay",
 	button2 = CANCEL and CANCEL or "Cancel",
 	OnAccept = function(self)
-		local page,entry = WowLua:GetCurrentPage()
+		local _,entry = WowLua:GetCurrentPage()
 		WowLuaFrameEditBox:SetText(entry.content)
 		local action = self:GetParent().data
 		if type(action) == "string" then
@@ -621,7 +626,7 @@ function WowLua:Button_Run()
 
 		local succ,err = WowLua:RunScript(text)
 		if not succ then
-			local chunkName,lineNum = err:match("(%b[]):(%d+):")
+			local _,lineNum = err:match("(%b[]):(%d+):")
 			lineNum = tonumber(lineNum)
 			WowLua:UpdateLineNums(lineNum)
 
@@ -630,12 +635,13 @@ function WowLua:Button_Run()
 
 			local curLine,start = 1,1
 			while curLine < lineNum do
-				local s,e = text:find("\n", start)
+				local _,e = text:find("\n", start)
 				start = e + 1
 				curLine = curLine + 1
 			end
 
-			local nextLine = select(2, text:find("\n", start))
+			-- unused next line assignment
+			--local nextLine = select(2, text:find("\n", start))
 
 			WowLuaFrameEditBox:SetFocus()
 			WowLuaFrameEditBox:SetCursorPosition(start - 1)
@@ -659,29 +665,28 @@ function WowLua:Button_Close()
 end
 
 function WowLua:IsModified()
-	local page,entry = self:GetCurrentPage()
+	local _,entry = self:GetCurrentPage()
 	local orig = entry.content
 	local current = WowLuaFrameEditBox:GetText(true)
 	return orig ~= current
 end
 
 function WowLua:IsUntitled()
-	local page, entry = self:GetCurrentPage()
+	local _, entry = self:GetCurrentPage()
 	return entry.untitled
 end
 
-function WowLua:SetTitle(modified)
-	local page,entry = self:GetCurrentPage()
+function WowLua:SetTitle(_)
+	local _,entry = self:GetCurrentPage()
 	WowLuaFrameTitle:SetFormattedText("%s%s - WowLua Editor", entry.name, self:IsModified() and "*" or "")
 end
 
 function WowLua:OnSizeChanged(frame)
 	-- The first graphic is offset 13 pixels to the right
 	local width = frame:GetWidth() - 13
-	local bg2w,bg3w,bg4w = 0,0,0
+	local bg2w,bg3w,bg4w = (width - 256),0,0
 
 	-- Resize bg2 up to 256 width
-	local bg2w = width - 256
 	if bg2w > 256 then
 		bg3w = bg2w - 256
 		bg2w = 256
@@ -722,7 +727,7 @@ function WowLua:OnSizeChanged(frame)
 
 	if WowLuaFrameResizeBar and false then
 		local parent = WowLuaFrameResizeBar:GetParent()
-		local cursorY = select(2, GetCursorPosition())
+		--local cursorY = select(2, GetCursorPosition())
 		local newPoint = select(5, WowLuaFrameResizeBar:GetPoint())
 		local maxPoint = parent:GetHeight() - 175;
 
@@ -738,17 +743,17 @@ function WowLua:OnSizeChanged(frame)
 	end
 end
 
-function WowLua:ResizeBar_OnMouseDown(frame, button)
+function WowLua:ResizeBar_OnMouseDown(frame, _)
 	frame.cursorStart = select(2, GetCursorPosition())
 	frame.anchorStart = select(5, frame:GetPoint())
 	frame:SetScript("OnUpdate", function(...) WowLua:ResizeBar_OnUpdate(...) end)
 end
 
-function WowLua:ResizeBar_OnMouseUp(frame, button)
+function WowLua:ResizeBar_OnMouseUp(frame, _)
 	frame:SetScript("OnUpdate", nil)
 end
 
-function WowLua:ResizeBar_OnUpdate(frame, elapsed)
+function WowLua:ResizeBar_OnUpdate(frame, _)
 	local parent = frame:GetParent()
 	local cursorY = select(2, GetCursorPosition())
 	local newPoint = frame.anchorStart - (frame.cursorStart - cursorY)/frame:GetEffectiveScale()
@@ -770,7 +775,7 @@ function WowLua:OnVerticalScroll(scrollFrame)
 	local scrollbar = getglobal(scrollFrame:GetName().."ScrollBar");
 
 	scrollbar:SetValue(offset);
-	local min, max = scrollbar:GetMinMaxValues();
+	local _, max = scrollbar:GetMinMaxValues();
 	local display = false;
 	if ( offset == 0 ) then
 	    getglobal(scrollbar:GetName().."ScrollUpButton"):Disable();
@@ -900,7 +905,7 @@ function WowLua:OnTextChanged(frame)
 	frame.highlightNum = nil
 end
 
-function WowLua:OnCursorChanged(frame)
+function WowLua:OnCursorChanged(_)
 	WowLua.dirty = true
 end
 
@@ -913,7 +918,7 @@ SLASH_WOWLUA1 = "/lua"
 SLASH_WOWLUA2 = "/wowlua"
 local first = true
 SlashCmdList["WOWLUA"] = function(txt)
-	local page, entry = WowLua:GetCurrentPage()
+	local _, entry = WowLua:GetCurrentPage()
 	if first then
 		WowLuaFrameEditBox:SetText(entry.content)
 		WowLuaFrameEditBox:SetWidth(WowLuaFrameEditScrollFrame:GetWidth())
@@ -940,19 +945,20 @@ end
 
 SLASH_WOWLUARUN1 = "/luarun"
 SLASH_WOWLUARUN2 = "/wowluarun"
-SlashCmdList["WOWLUARUN"] = function(txt, editbox)
-    local entry, idx = WowLua:SelectPage(txt)
+SlashCmdList["WOWLUARUN"] = function(txt, _)
+    local entry, _ = WowLua:SelectPage(txt)
     if not entry then
         printf("|cFF33FF99WowLua|r: Unable to find a page named '%s'", txt)
         return
     else
         printf("|cFF33FF99WowLua|r: Running page '%s'", txt)
         local func, err = loadstring(entry.content, "WowLua")
+		local succ
         if not func then
             printf("|cFF33FF99WowLua|r: Error compiling page '%s': %s", txt, err)
         else
             -- Call the function
-            local succ, err = pcall(func)
+            succ, err = pcall(func)
 
             if not succ then
                 printf("|cFF33FF99WowLua|r: Error while running page '%s': %s", txt, err)
